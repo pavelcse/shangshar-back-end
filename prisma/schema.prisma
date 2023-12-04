@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model user {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique(map: "User_email_key")
+  name      String?
+  password  String?
+  InStock   Int      @default(0)
+  CreatedAt DateTime   @default(now()) @db.DateTime(0)
+  DeletedAt DateTime?  @db.Timestamp
+  item      item[]
+  month     month[]
+  expense   expense[]
+}
+
+model item {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  item      String?
+  cost      Int
+  CreatedAt DateTime   @default(now()) @db.DateTime(0)
+  DeletedAt DateTime?  @db.Timestamp
+  user      user     @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "Item_userId_fkey")
+
+  @@index([userId], map: "Item_userId_fkey")
+}
+
+model month {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  month       String  
+  year        Int
+  totalEarn   Int        @default(0)
+  isCompleted Boolean    @default(false)
+  CreatedAt   DateTime   @default(now()) @db.DateTime(0)
+  DeletedAt   DateTime?  @db.Timestamp
+  expense     expense[]
+  user        user        @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "month_userId_fkey")
+
+  @@unique([userId, month, year])
+  @@index([userId])
+}
+
+model expense {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  monthId     Int
+  name        String?
+  amount      Int
+  CreatedAt   DateTime   @default(now()) @db.DateTime(0)
+  DeletedAt   DateTime?  @db.Timestamp
+  user        user       @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "expense_userId_fkey")
+  month       month      @relation(fields: [monthId], references: [id], onUpdate: Restrict, map: "expense_monthId_fkey")
+
+  @@index([userId, monthId])
+}
